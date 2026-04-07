@@ -19,8 +19,9 @@ CheckForUpdates() {
     VersionURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/version.txt"
     TempFile := A_Temp "\github_version.txt"
 
+    ; ИСПРАВЛЕНО: Download вместо UrlDownloadToFile
     try {
-        UrlDownloadToFile(VersionURL, TempFile)
+        Download(VersionURL, TempFile)
     } catch {
         return
     }
@@ -47,8 +48,9 @@ UpdateScript() {
     ScriptURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/script.ahk"
     NewScript := A_Temp "\new_script.ahk"
 
+    ; ИСПРАВЛЕНО: Download вместо UrlDownloadToFile
     try {
-        UrlDownloadToFile(ScriptURL, NewScript)
+        Download(ScriptURL, NewScript)
     } catch {
         MsgBox("Не удалось скачать обновление", "Ошибка", 16)
         return
@@ -59,14 +61,13 @@ UpdateScript() {
         return
     }
 
-    ; Создаём BAT-файл (без многострочных строк)
+    ; Создаём BAT-файл
     BatFile := A_Temp "\update.bat"
     
     if FileExist(BatFile) {
         FileDelete(BatFile)
     }
     
-    ; Записываем BAT-файл построчно (каждая строка отдельно)
     FileAppend("@echo off", BatFile)
     FileAppend("`n", BatFile)
     FileAppend("timeout /t 2 /nobreak >nul", BatFile)
