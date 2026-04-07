@@ -23,7 +23,7 @@ CheckForUpdates() {
     try {
         Download(VersionURL, TempFile)
     } catch {
-        return  ; Нет интернета
+        return
     }
 
     ; Читаем версию
@@ -54,21 +54,19 @@ UpdateScript() {
         return
     }
 
-    ; Создаём BAT-файл
+    ; Создаём BAT-файл (исправленный синтаксис)
     BatFile := A_Temp "\update.bat"
-    BatContent := '
-    @echo off
-    timeout /t 2 /nobreak >nul
-    copy /Y "' NewScript '" "' A_ScriptFullPath '"
-    if %errorlevel% equ 0 (
-        del "' NewScript '"
-        start "" "' A_ScriptFullPath '"
-    )
-    del "%~f0"
-    '
-
     FileDelete(BatFile)
-    FileAppend(BatContent, BatFile)
+    
+    ; Записываем BAT-файл построчно
+    FileAppend("@echo off`n", BatFile)
+    FileAppend("timeout /t 2 /nobreak >nul`n", BatFile)
+    FileAppend('copy /Y "' NewScript '" "' A_ScriptFullPath '"`n', BatFile)
+    FileAppend("if %errorlevel% equ 0 (`n", BatFile)
+    FileAppend('    del "' NewScript '"`n', BatFile)
+    FileAppend('    start "" "' A_ScriptFullPath '"`n', BatFile)
+    FileAppend(")`n", BatFile)
+    FileAppend('del "%~f0"`n', BatFile)
 
     ; Запускаем обновление и закрываемся
     Run(BatFile, , "Hide")
@@ -81,7 +79,22 @@ CheckForUpdates()
 ; ========== ВАШ ОСНОВНОЙ КОД ==========
 ; ВСТАВЬТЕ СЮДА ВАШИ ГОРЯЧИЕ СТРОКИ
 
-; Пример:
-; ::р1::https://disk.yandex.ru/...
+::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
+::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
+::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
 
-; ==================================================
+::к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
+::к2::https://disk.yandex.ru/d/C8bF6NlbDU5x5Q 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
+::к3::https://disk.yandex.ru/d/b_AyU8vH4YTFPw 169 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+::к4::https://clck.ru/3RDNpV 179 тыс./чел., одноместный номер (санузел на 2 комнаты)
+::к5::https://disk.yandex.ru/d/U2-iRYUjrPbD5Q 179 тыс./чел., 2-х местный номер (свой санузел за пределами номера)
+::к6::https://disk.yandex.ru/d/ose-NoIbZq1m0Q 185 тыс./чел., одноместный номер (свой санузел за пределами номера)
+::к7::https://clck.ru/3RK9WY 179 тыс./чел., 3-х местный номер (свой санузел за пределами номера)
+::к8::https://clck.ru/3RNCbo 179 тыс./чел., 2-х местный номер (свой санузел)
+::к9::https://clck.ru/3RKV8Q 179 тыс./чел., 2-х/3-х местный номер (свой санузел)
+
+::о1::https://disk.yandex.ru/d/iLm8XE2BtdbCdA 179 тыс./чел., 2-х местный номер (свой санузел)
+::о2::169 тыс./чел., 2-х местный номер (санузел на 2 комнаты) — ссылки нет
+
+; ========== КОНЕЦ ==========
