@@ -4,7 +4,7 @@ SendMode Input
 #Persistent
 
 ; ========== АВТООБНОВЛЕНИЕ ==========
-CurrentVersion := "1.0.4"
+CurrentVersion := "1.0.5"
 
 ; GitHub RAW ссылки
 VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/main/version.txt"
@@ -72,7 +72,7 @@ CheckForUpdates()
 ; ========== ДАЛЬШЕ ВЕСЬ ОСНОВНОЙ КОД ==========
 
 ; ========== УСАДЬБА "РОСИНКА" ==========
-::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165515151 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
 ::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
 ::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
 ::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
