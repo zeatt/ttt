@@ -22,8 +22,20 @@ CheckForUpdates() {
     }
 
     FileRead, LatestVersionRaw, %TempFile%
-    LatestVersion := RegExReplace(LatestVersionRaw, "\s+")
-    CurrentVersionClean := RegExReplace(CurrentVersion, "\s+")
+    
+    ; Простая очистка от пробелов и переносов строк
+    StringReplace, LatestVersion, LatestVersionRaw, `r, , All
+    StringReplace, LatestVersion, LatestVersion, `n, , All
+    StringReplace, LatestVersion, LatestVersion, `t, , All
+    StringReplace, LatestVersion, LatestVersion, %A_Space%, , All
+    
+    ; Очищаем текущую версию
+    CurrentVersionClean := CurrentVersion
+    StringReplace, CurrentVersionClean, CurrentVersionClean, `r, , All
+    StringReplace, CurrentVersionClean, CurrentVersionClean, `n, , All
+    StringReplace, CurrentVersionClean, CurrentVersionClean, `t, , All
+    StringReplace, CurrentVersionClean, CurrentVersionClean, %A_Space%, , All
+    
     FileDelete, %TempFile%
 
     if (LatestVersion != CurrentVersionClean) {
