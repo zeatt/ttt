@@ -4,7 +4,7 @@ SendMode Input
 #Persistent
 
 ; ========== АВТООБНОВЛЕНИЕ ==========
-CurrentVersion := "1.0.3"
+CurrentVersion := "1.0.5"
 
 ; РАБОЧИЕ RAW-ССЫЛКИ (через GitHub)
 VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
@@ -19,13 +19,11 @@ CheckForUpdates() {
     URLDownloadToFile, %VersionURL%, %TempFile%
     
     if ErrorLevel {
-        return  ; Нет интернета или ошибка — просто работаем дальше
+        return
     }
     
     ; Читаем версию из файла
     FileRead, LatestVersionRaw, %TempFile%
-    
-    ; Очищаем от мусора (пробелы, табуляции, переносы строк)
     LatestVersion := Trim(LatestVersionRaw, " `t`n`r")
     CurrentVersionClean := Trim(CurrentVersion, " `t`n`r")
     
@@ -41,24 +39,33 @@ CheckForUpdates() {
             URLDownloadToFile, %ScriptURL%, %NewScript%
             
             if ErrorLevel {
-                MsgBox, Не удалось скачать обновление. Проверьте интернет.
+                MsgBox, Не удалось скачать обновление.
                 return
             }
             
-            ; Закрываем текущий скрипт
-            DetectHiddenWindows, On
-            WinClose, %A_ScriptFullPath% ahk_class AutoHotkey
+            ; КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: создаём BAT-файл для обновления
+            BatchFile := A_Temp "\update_script.bat"
+            FileDelete, %BatchFile%
             
-            ; Заменяем файл
-            FileCopy, %NewScript%, %A_ScriptFullPath%, 1
+            ; Создаём bat-файл, который подождёт и заменит скрипт
+            FileAppend,
+            (
+@echo off
+timeout /t 1 /nobreak >nul
+copy /Y "%NewScript%" "%A_ScriptFullPath%"
+if errorlevel 1 (
+    echo Не удалось обновить
+    pause
+) else (
+    del "%NewScript%"
+    start "" "%A_ScriptFullPath%"
+)
+del "%~f0"
+            ), %BatchFile%
             
-            if ErrorLevel {
-                MsgBox, Не удалось обновить файл. Запустите скрипт от имени Администратора.
-                return
-            }
-            
-            MsgBox, Обновление успешно установлено!
-            Reload
+            ; Запускаем bat-файл и закрываем текущий скрипт
+            Run, %BatchFile%,, Hide
+            ExitApp
         }
     }
 }
