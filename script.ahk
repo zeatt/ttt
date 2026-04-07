@@ -19,7 +19,7 @@ CheckForUpdates() {
     VersionURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/version.txt"
     TempFile := A_Temp "\github_version.txt"
 
-    ; ИСПРАВЛЕНО: Download вместо UrlDownloadToFile
+    ; ИСПРАВЛЕНО: Download (а не UrlDownloadToFile)
     try {
         Download(VersionURL, TempFile)
     } catch {
@@ -48,7 +48,7 @@ UpdateScript() {
     ScriptURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/script.ahk"
     NewScript := A_Temp "\new_script.ahk"
 
-    ; ИСПРАВЛЕНО: Download вместо UrlDownloadToFile
+    ; ИСПРАВЛЕНО: Download (а не UrlDownloadToFile)
     try {
         Download(ScriptURL, NewScript)
     } catch {
