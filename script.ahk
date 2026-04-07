@@ -4,9 +4,9 @@ SendMode Input
 #Persistent
 
 ; ========== АВТООБНОВЛЕНИЕ ==========
-CurrentVersion := "1.0.5"
+CurrentVersion := "1.0.3"
 
-; РАБОЧИЕ RAW-ССЫЛКИ (с /refs/heads/)
+; РАБОЧИЕ RAW-ССЫЛКИ (через GitHub)
 VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
 ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/script.ahk"
 
@@ -14,61 +14,59 @@ ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/scrip
 CheckForUpdates() {
     global CurrentVersion, VersionURL, ScriptURL
     TempFile := A_Temp "\version_check.txt"
-
+    
+    ; Скачиваем файл с версией
     URLDownloadToFile, %VersionURL%, %TempFile%
-
+    
     if ErrorLevel {
-        return
+        return  ; Нет интернета или ошибка — просто работаем дальше
     }
-
+    
+    ; Читаем версию из файла
     FileRead, LatestVersionRaw, %TempFile%
     
-    ; Простая очистка от пробелов и переносов строк
-    StringReplace, LatestVersion, LatestVersionRaw, `r, , All
-    StringReplace, LatestVersion, LatestVersion, `n, , All
-    StringReplace, LatestVersion, LatestVersion, `t, , All
-    StringReplace, LatestVersion, LatestVersion, %A_Space%, , All
+    ; Очищаем от мусора (пробелы, табуляции, переносы строк)
+    LatestVersion := Trim(LatestVersionRaw, " `t`n`r")
+    CurrentVersionClean := Trim(CurrentVersion, " `t`n`r")
     
-    ; Очищаем текущую версию
-    CurrentVersionClean := CurrentVersion
-    StringReplace, CurrentVersionClean, CurrentVersionClean, `r, , All
-    StringReplace, CurrentVersionClean, CurrentVersionClean, `n, , All
-    StringReplace, CurrentVersionClean, CurrentVersionClean, `t, , All
-    StringReplace, CurrentVersionClean, CurrentVersionClean, %A_Space%, , All
-    
+    ; Удаляем временный файл
     FileDelete, %TempFile%
-
+    
+    ; Сравниваем версии
     if (LatestVersion != CurrentVersionClean) {
         MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
         IfMsgBox, Yes
         {
             NewScript := A_Temp "\script_new.ahk"
             URLDownloadToFile, %ScriptURL%, %NewScript%
-
+            
             if ErrorLevel {
-                MsgBox, Не удалось скачать обновление.
+                MsgBox, Не удалось скачать обновление. Проверьте интернет.
                 return
             }
-
+            
+            ; Закрываем текущий скрипт
             DetectHiddenWindows, On
             WinClose, %A_ScriptFullPath% ahk_class AutoHotkey
-
+            
+            ; Заменяем файл
             FileCopy, %NewScript%, %A_ScriptFullPath%, 1
-
+            
             if ErrorLevel {
-                MsgBox, Не удалось обновить файл. Запустите от имени Администратора.
+                MsgBox, Не удалось обновить файл. Запустите скрипт от имени Администратора.
                 return
             }
-
+            
             MsgBox, Обновление успешно установлено!
             Reload
         }
     }
 }
 
+; ЗАПУСКАЕМ ПРОВЕРКУ ОБНОВЛЕНИЙ
 CheckForUpdates()
 
-; ========== ДАЛЬШЕ ВЕСЬ ОСНОВНОЙ КОД ==========
+; ========== ОСНОВНОЙ КОД (ГОРЯЧИЕ СТРОКИ) ==========
 
 ; ========== УСАДЬБА "РОСИНКА" ==========
 ::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
