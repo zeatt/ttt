@@ -1,33 +1,29 @@
 ; ========== ДИРЕКТИВЫ ==========
 #NoEnv
 SendMode Input
-#Persistent 
+#Persistent
 
-; ========== АВТООБНОВЛЕНИЕ ==========
-CurrentVersion := "1.0.6" 
+; ========== АВТООБНОВЛЕНИЕ (через GitHub) ==========
+CurrentVersion := "1.0.8"
 
-; ID файлов
-ScriptID := "1Qy2cVkYBmLIhNPsdNJV3b8XkWidD4DoG"
-VersionID := "150rH-WeAtrLfB01yddRkUiKqtRFJZp-n"
-
-; ФОРМИРУЕМ ПРЯМЫЕ ССЫЛКИ ДЛЯ СКАЧИВАНИЯ
-VersionURL := "https://drive.google.com/uc?export=download&id=" VersionID
-ScriptURL := "https://drive.google.com/uc?export=download&id=" ScriptID
+; ПРЯМЫЕ ССЫЛКИ НА ФАЙЛЫ В GITHUB (RAW)
+VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
+ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/script.ahk"
 
 ; ФУНКЦИЯ ПРОВЕРКИ ОБНОВЛЕНИЙ
 CheckForUpdates() {
     global CurrentVersion, VersionURL, ScriptURL
     TempFile := A_Temp "\version_check.txt"
     URLDownloadToFile, %VersionURL%, %TempFile%
-
+    
     if ErrorLevel {
-        return ; Не удалось проверить — просто работаем дальше
+        return  ; Не удалось проверить — просто работаем дальше
     }
-
+    
     FileRead, LatestVersion, %TempFile%
     LatestVersion := Trim(LatestVersion)
     FileDelete, %TempFile%
-
+    
     if (LatestVersion != CurrentVersion) {
         MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
         IfMsgBox, Yes
@@ -35,26 +31,26 @@ CheckForUpdates() {
             ; Скачиваем новую версию скрипта
             NewScript := A_Temp "\script_new.ahk"
             URLDownloadToFile, %ScriptURL%, %NewScript%
-
+            
             if ErrorLevel {
                 MsgBox, Не удалось скачать обновление. Проверьте интернет.
                 return
             }
-
+            
             ; Закрываем старые экземпляры скрипта
             DetectHiddenWindows, On
             WinClose, %A_ScriptFullPath% ahk_class AutoHotkey
-
+            
             ; Заменяем текущий скрипт новым
             FileCopy, %NewScript%, %A_ScriptFullPath%, 1
-
+            
             if ErrorLevel {
                 MsgBox, Не удалось обновить файл. Запустите скрипт от имени Администратора.
                 return
             }
-
+            
             MsgBox, Обновление успешно установлено! Скрипт перезапустится.
-
+            
             ; Запускаем новый скрипт и закрываем старый
             Run, "%A_ScriptFullPath%"
             ExitApp
