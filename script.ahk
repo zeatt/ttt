@@ -14,21 +14,29 @@ ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/main/script.ahk"
 CheckForUpdates() {
     global CurrentVersion, VersionURL, ScriptURL
     TempFile := A_Temp "\version_check.txt"
+    
     URLDownloadToFile, %VersionURL%, %TempFile%
     
     if ErrorLevel {
+        MsgBox, Ошибка скачивания! ErrorLevel = %ErrorLevel%
         return
     }
     
-    FileRead, LatestVersion, %TempFile%
+    ; Читаем файл
+    FileRead, LatestVersionRaw, %TempFile%
     
-    ; ========== ОЧИСТКА ОТ ВСЕХ НЕВИДИМЫХ СИМВОЛОВ ==========
-    LatestVersion := RegExReplace(LatestVersion, "\s+")  ; Удаляет ВСЕ пробелы, переносы, табуляции
+    ; Показываем, что скачали (для отладки)
+    MsgBox, Скачано из version.txt: [%LatestVersionRaw%]`nДлина: %StrLen(LatestVersionRaw)%
+    
+    ; Очищаем от всех невидимых символов
+    LatestVersion := RegExReplace(LatestVersionRaw, "\s+")
     CurrentVersionClean := RegExReplace(CurrentVersion, "\s+")
+    
+    ; Показываем очищенные версии
+    MsgBox, Очищенная версия с GitHub: [%LatestVersion%]`nОчищенная ваша версия: [%CurrentVersionClean%]`nРавны? % (LatestVersion = CurrentVersionClean ? "ДА" : "НЕТ")
     
     FileDelete, %TempFile%
     
-    ; Сравниваем очищенные версии
     if (LatestVersion != CurrentVersionClean) {
         MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
         IfMsgBox, Yes
@@ -54,6 +62,8 @@ CheckForUpdates() {
             MsgBox, Обновление успешно установлено!
             Reload
         }
+    } else {
+        MsgBox, Версии совпадают. Обновление не требуется.
     }
 }
 
@@ -62,7 +72,7 @@ CheckForUpdates()
 ; ========== ДАЛЬШЕ ВЕСЬ ОСНОВНОЙ КОД ==========
 
 ; ========== УСАДЬБА "РОСИНКА" ==========
-::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165515151 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
 ::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
 ::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
 ::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
