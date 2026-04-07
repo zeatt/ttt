@@ -6,64 +6,51 @@ SendMode Input
 ; ========== АВТООБНОВЛЕНИЕ ==========
 CurrentVersion := "1.0.5"
 
-; GitHub RAW ссылки
-VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/main/version.txt"
-ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/main/script.ahk"
+; РАБОЧИЕ RAW-ССЫЛКИ (с /refs/heads/)
+VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
+ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/script.ahk"
 
 ; ФУНКЦИЯ ПРОВЕРКИ ОБНОВЛЕНИЙ
 CheckForUpdates() {
     global CurrentVersion, VersionURL, ScriptURL
     TempFile := A_Temp "\version_check.txt"
-    
+
     URLDownloadToFile, %VersionURL%, %TempFile%
-    
+
     if ErrorLevel {
-        MsgBox, Ошибка скачивания! ErrorLevel = %ErrorLevel%
         return
     }
-    
-    ; Читаем файл
+
     FileRead, LatestVersionRaw, %TempFile%
-    
-    ; Показываем, что скачали (для отладки)
-    MsgBox, Скачано из version.txt: [%LatestVersionRaw%]`nДлина: %StrLen(LatestVersionRaw)%
-    
-    ; Очищаем от всех невидимых символов
     LatestVersion := RegExReplace(LatestVersionRaw, "\s+")
     CurrentVersionClean := RegExReplace(CurrentVersion, "\s+")
-    
-    ; Показываем очищенные версии
-    MsgBox, Очищенная версия с GitHub: [%LatestVersion%]`nОчищенная ваша версия: [%CurrentVersionClean%]`nРавны? % (LatestVersion = CurrentVersionClean ? "ДА" : "НЕТ")
-    
     FileDelete, %TempFile%
-    
+
     if (LatestVersion != CurrentVersionClean) {
         MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
         IfMsgBox, Yes
         {
             NewScript := A_Temp "\script_new.ahk"
             URLDownloadToFile, %ScriptURL%, %NewScript%
-            
+
             if ErrorLevel {
                 MsgBox, Не удалось скачать обновление.
                 return
             }
-            
+
             DetectHiddenWindows, On
             WinClose, %A_ScriptFullPath% ahk_class AutoHotkey
-            
+
             FileCopy, %NewScript%, %A_ScriptFullPath%, 1
-            
+
             if ErrorLevel {
-                MsgBox, Не удалось обновить файл.
+                MsgBox, Не удалось обновить файл. Запустите от имени Администратора.
                 return
             }
-            
+
             MsgBox, Обновление успешно установлено!
             Reload
         }
-    } else {
-        MsgBox, Версии совпадают. Обновление не требуется.
     }
 }
 
