@@ -4,7 +4,7 @@ SendMode Input
 #Persistent
 
 ; ========== АВТООБНОВЛЕНИЕ (через GitHub) ==========
-CurrentVersion := "1.0.8"
+CurrentVersion := "1.0.9"
 
 ; ПРЯМЫЕ ССЫЛКИ НА ФАЙЛЫ В GITHUB (RAW)
 VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
