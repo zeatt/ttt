@@ -1,97 +1,108 @@
-; ========== ДИРЕКТИВЫ ==========
+; ========== АВТООБНОВЛЕНИЕ ЧЕРЕЗ GITHUB ==========
+; Простая и надёжная версия
+
 #NoEnv
-SendMode Input
 #Persistent
+SendMode Input
 
-; ========== АВТООБНОВЛЕНИЕ ==========
-CurrentVersion := "1.0.5"
+; ========== НАСТРОЙКИ ==========
+CurrentVersion := "1.0.0"
+RepoOwner := "zeatt"
+RepoName := "ttt"
+Branch := "main"
 
-; РАБОЧИЕ RAW-ССЫЛКИ (через GitHub)
-VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/version.txt"
-ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/refs/heads/main/script.ahk"
+; Формируем ссылки
+VersionURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/version.txt"
+ScriptURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/script.ahk"
 
-; ФУНКЦИЯ ПРОВЕРКИ ОБНОВЛЕНИЙ
+; ========== ФУНКЦИЯ ОБНОВЛЕНИЯ ==========
 CheckForUpdates() {
     global CurrentVersion, VersionURL, ScriptURL
-    TempFile := A_Temp "\version_check.txt"
+    
+    ; Создаём временный файл
+    tempFile := A_Temp "\github_version.txt"
     
     ; Скачиваем файл с версией
-    URLDownloadToFile, %VersionURL%, %TempFile%
+    try {
+        URLDownloadToFile, %VersionURL%, %tempFile%
+    } catch {
+        return  ; Нет интернета - выходим
+    }
     
-    if ErrorLevel {
+    ; Проверяем, скачался ли файл
+    if !FileExist(tempFile) {
         return
     }
     
-    ; Читаем версию из файла
-    FileRead, LatestVersionRaw, %TempFile%
-    LatestVersion := Trim(LatestVersionRaw, " `t`n`r")
-    CurrentVersionClean := Trim(CurrentVersion, " `t`n`r")
+    ; Читаем версию с GitHub
+    FileRead, githubVersion, %tempFile%
+    FileDelete, %tempFile%
     
-    ; Удаляем временный файл
-    FileDelete, %TempFile%
+    ; Удаляем лишние пробелы и переносы строк
+    githubVersion := Trim(githubVersion, " `t`n`r")
     
     ; Сравниваем версии
-    if (LatestVersion != CurrentVersionClean) {
-        MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
-        IfMsgBox, Yes
+    if (githubVersion != CurrentVersion) {
+        ; Спрашиваем пользователя
+        MsgBox, 4, Обновление, Доступна новая версия %githubVersion%!`nУ вас версия %CurrentVersion%.`n`nОбновить?
+        IfMsgBox Yes
         {
-            NewScript := A_Temp "\script_new.ahk"
-            URLDownloadToFile, %ScriptURL%, %NewScript%
-            
-            if ErrorLevel {
-                MsgBox, Не удалось скачать обновление.
-                return
-            }
-            
-            ; КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: создаём BAT-файл для обновления
-            BatchFile := A_Temp "\update_script.bat"
-            FileDelete, %BatchFile%
-            
-            ; Создаём bat-файл, который подождёт и заменит скрипт
-            FileAppend,
-            (
-@echo off
-timeout /t 1 /nobreak >nul
-copy /Y "%NewScript%" "%A_ScriptFullPath%"
-if errorlevel 1 (
-    echo Не удалось обновить
-    pause
-) else (
-    del "%NewScript%"
-    start "" "%A_ScriptFullPath%"
-)
-del "%~f0"
-            ), %BatchFile%
-            
-            ; Запускаем bat-файл и закрываем текущий скрипт
-            Run, %BatchFile%,, Hide
-            ExitApp
+            UpdateScript()
         }
     }
 }
 
-; ЗАПУСКАЕМ ПРОВЕРКУ ОБНОВЛЕНИЙ
+; ========== ФУНКЦИЯ ОБНОВЛЕНИЯ СКРИПТА ==========
+UpdateScript() {
+    global ScriptURL
+    
+    ; Скачиваем новый скрипт
+    newScript := A_Temp "\new_script.ahk"
+    try {
+        URLDownloadToFile, %ScriptURL%, %newScript%
+    } catch {
+        MsgBox, Не удалось скачать обновление.
+        return
+    }
+    
+    if !FileExist(newScript) {
+        MsgBox, Ошибка: файл обновления не скачался.
+        return
+    }
+    
+    ; Создаём BAT-файл для обновления
+    batFile := A_Temp "\update.bat"
+    FileDelete, %batFile%
+    
+    ; Содержимое BAT-файла
+    batContent =
+(
+@echo off
+timeout /t 2 /nobreak >nul
+copy /Y "%newScript%" "%A_ScriptFullPath%"
+if %errorlevel% equ 0 (
+    del "%newScript%"
+    start "" "%A_ScriptFullPath%"
+)
+del "%~f0"
+)
+    
+    ; Записываем BAT-файл
+    FileAppend, %batContent%, %batFile%
+    
+    ; Запускаем BAT-файл и закрываем текущий скрипт
+    Run, %batFile%,, Hide
+    ExitApp
+}
+
+; ========== ЗАПУСК ПРОВЕРКИ ==========
+; Проверяем обновления при старте
 CheckForUpdates()
 
-; ========== ОСНОВНОЙ КОД (ГОРЯЧИЕ СТРОКИ) ==========
+; ========== ВАШ ОСНОВНОЙ КОД ==========
+; Всё, что было раньше - горячие строки, и т.д.
 
-; ========== УСАДЬБА "РОСИНКА" ==========
-::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
-::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
-::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
+; Пример горячих строк (ваши данные)
+::test::Тестовое сообщение
 
-; ========== УСАДЬБА "КАНТРИ" ==========
-::к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к2::https://disk.yandex.ru/d/C8bF6NlbDU5x5Q 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к3::https://disk.yandex.ru/d/b_AyU8vH4YTFPw 169 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::к4::https://clck.ru/3RDNpV 179 тыс./чел., одноместный номер (санузел на 2 комнаты)
-::к5::https://disk.yandex.ru/d/U2-iRYUjrPbD5Q 179 тыс./чел., 2-х местный номер (свой санузел за пределами номера)
-::к6::https://disk.yandex.ru/d/ose-NoIbZq1m0Q 185 тыс./чел., одноместный номер (свой санузел за пределами номера)
-::к7::https://clck.ru/3RK9WY 179 тыс./чел., 3-х местный номер (свой санузел за пределами номера)
-::к8::https://clck.ru/3RNCbo 179 тыс./чел., 2-х местный номер (свой санузел)
-::к9::https://clck.ru/3RKV8Q 179 тыс./чел., 2-х/3-х местный номер (свой санузел)
-
-; ========== ОЙКУМЕН ==========
-::о1::https://disk.yandex.ru/d/iLm8XE2BtdbCdA 179 тыс./чел., 2-х местный номер (свой санузел)
-::о2::169 тыс./чел., 2-х местный номер (санузел на 2 комнаты) — ссылки нет
+; ========== КОНЕЦ СКРИПТА ==========
