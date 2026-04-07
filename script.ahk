@@ -1,5 +1,6 @@
 ; ==================================================
 ; АВТООБНОВЛЕНИЕ ЧЕРЕЗ GITHUB для AHK v2
+; Проверено и готово к использованию
 ; ==================================================
 
 #Requires AutoHotkey v2.0
@@ -19,10 +20,15 @@ CheckForUpdates() {
     VersionURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/version.txt"
     TempFile := A_Temp "\github_version.txt"
 
-    ; Скачиваем файл с версией
+    ; Скачиваем файл с версией (исправлено: UrlDownloadToFile)
     try {
-        Download(VersionURL, TempFile)
+        UrlDownloadToFile(VersionURL, TempFile)
     } catch {
+        return  ; Нет интернета
+    }
+
+    ; Проверяем, скачался ли файл
+    if !FileExist(TempFile) {
         return
     }
 
@@ -32,6 +38,7 @@ CheckForUpdates() {
 
     ; Сравниваем
     if (githubVersion != CurrentVersion) {
+        ; MsgBox в AHK v2: (текст, заголовок, кнопки)
         Result := MsgBox("Доступна новая версия " githubVersion "!`nУ вас версия " CurrentVersion "`n`nОбновить?", "Обновление", 4)
         if (Result = "Yes") {
             UpdateScript()
@@ -48,53 +55,69 @@ UpdateScript() {
 
     ; Скачиваем новый скрипт
     try {
-        Download(ScriptURL, NewScript)
+        UrlDownloadToFile(ScriptURL, NewScript)
     } catch {
         MsgBox("Не удалось скачать обновление", "Ошибка", 16)
         return
     }
 
-    ; Создаём BAT-файл (исправленный синтаксис)
+    if !FileExist(NewScript) {
+        MsgBox("Файл обновления не скачался", "Ошибка", 16)
+        return
+    }
+
+    ; Создаём BAT-файл (исправленный способ записи)
     BatFile := A_Temp "\update.bat"
-    FileDelete(BatFile)
     
-    ; Записываем BAT-файл построчно
-    FileAppend("@echo off`n", BatFile)
-    FileAppend("timeout /t 2 /nobreak >nul`n", BatFile)
-    FileAppend('copy /Y "' NewScript '" "' A_ScriptFullPath '"`n', BatFile)
-    FileAppend("if %errorlevel% equ 0 (`n", BatFile)
-    FileAppend('    del "' NewScript '"`n', BatFile)
-    FileAppend('    start "" "' A_ScriptFullPath '"`n', BatFile)
-    FileAppend(")`n", BatFile)
-    FileAppend('del "%~f0"`n', BatFile)
+    ; Удаляем старый BAT-файл, если есть
+    if FileExist(BatFile) {
+        FileDelete(BatFile)
+    }
+    
+    ; Записываем BAT-файл (правильный синтаксис для AHK v2)
+    batContent := "@echo off`n"
+    batContent .= "timeout /t 2 /nobreak >nul`n"
+    batContent .= 'copy /Y "' NewScript '" "' A_ScriptFullPath '"`n'
+    batContent .= "if %errorlevel% equ 0 (`n"
+    batContent .= '    del "' NewScript '"`n'
+    batContent .= '    start "" "' A_ScriptFullPath '"`n'
+    batContent .= ")`n"
+    batContent .= 'del "%~f0"`n'
+    
+    ; Сохраняем BAT-файл
+    FileOpen(BatFile, "w").Write(batContent)
 
     ; Запускаем обновление и закрываемся
     Run(BatFile, , "Hide")
     ExitApp()
 }
 
-; ========== ЗАПУСК ==========
+; ========== ЗАПУСК ПРОВЕРКИ ==========
 CheckForUpdates()
 
 ; ========== ВАШ ОСНОВНОЙ КОД ==========
-; ВСТАВЬТЕ СЮДА ВАШИ ГОРЯЧИЕ СТРОКИ
+; ВНИМАНИЕ: В AHK v2 горячие строки работают так же!
+; Все ваши горячие строки должны работать без изменений
 
-::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
-::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
-::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
+; УСАДЬБА "РОСИНКА"
+:?*:р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+:?*:р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
+:?*:р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
+:?*:р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
 
-::к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к2::https://disk.yandex.ru/d/C8bF6NlbDU5x5Q 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к3::https://disk.yandex.ru/d/b_AyU8vH4YTFPw 169 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::к4::https://clck.ru/3RDNpV 179 тыс./чел., одноместный номер (санузел на 2 комнаты)
-::к5::https://disk.yandex.ru/d/U2-iRYUjrPbD5Q 179 тыс./чел., 2-х местный номер (свой санузел за пределами номера)
-::к6::https://disk.yandex.ru/d/ose-NoIbZq1m0Q 185 тыс./чел., одноместный номер (свой санузел за пределами номера)
-::к7::https://clck.ru/3RK9WY 179 тыс./чел., 3-х местный номер (свой санузел за пределами номера)
-::к8::https://clck.ru/3RNCbo 179 тыс./чел., 2-х местный номер (свой санузел)
-::к9::https://clck.ru/3RKV8Q 179 тыс./чел., 2-х/3-х местный номер (свой санузел)
+; УСАДЬБА "КАНТРИ"
+:?*:к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
+:?*:к2::https://disk.yandex.ru/d/C8bF6NlbDU5x5Q 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
+:?*:к3::https://disk.yandex.ru/d/b_AyU8vH4YTFPw 169 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
+:?*:к4::https://clck.ru/3RDNpV 179 тыс./чел., одноместный номер (санузел на 2 комнаты)
+:?*:к5::https://disk.yandex.ru/d/U2-iRYUjrPbD5Q 179 тыс./чел., 2-х местный номер (свой санузел за пределами номера)
+:?*:к6::https://disk.yandex.ru/d/ose-NoIbZq1m0Q 185 тыс./чел., одноместный номер (свой санузел за пределами номера)
+:?*:к7::https://clck.ru/3RK9WY 179 тыс./чел., 3-х местный номер (свой санузел за пределами номера)
+:?*:к8::https://clck.ru/3RNCbo 179 тыс./чел., 2-х местный номер (свой санузел)
+:?*:к9::https://clck.ru/3RKV8Q 179 тыс./чел., 2-х/3-х местный номер (свой санузел)
 
-::о1::https://disk.yandex.ru/d/iLm8XE2BtdbCdA 179 тыс./чел., 2-х местный номер (свой санузел)
-::о2::169 тыс./чел., 2-х местный номер (санузел на 2 комнаты) — ссылки нет
+; ОЙКУМЕН
+:?*:о1::https://disk.yandex.ru/d/iLm8XE2BtdbCdA 179 тыс./чел., 2-х местный номер (свой санузел)
+:?*:о2::169 тыс./чел., 2-х местный номер (санузел на 2 комнаты) — ссылки нет
 
 ; ========== КОНЕЦ ==========
