@@ -1,117 +1,100 @@
-; ==================================================
-; АВТООБНОВЛЕНИЕ ЧЕРЕЗ GITHUB для AHK v2
-; ==================================================
-
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-Persistent
 
-; ========== НАСТРОЙКИ ==========
-CurrentVersion := "1.0.1"
-RepoOwner := "zeatt"
-RepoName := "ttt"
-Branch := "main"
+; ============================================
+;             CONFIG
+; ============================================
+APP_VERSION := "2.0.0"
 
-; ========== ФУНКЦИЯ ПРОВЕРКИ ==========
-CheckForUpdates() {
-    global CurrentVersion, RepoOwner, RepoName, Branch
+VERSION_URL := "https://raw.githubusercontent.com/zeatt/ttt/main/version.txt"
+SCRIPT_URL  := "https://raw.githubusercontent.com/zeatt/ttt/main/script.ahk"
 
-    VersionURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/version.txt"
-    TempFile := A_Temp "\github_version.txt"
+CheckForUpdate()
 
-    ; ИСПРАВЛЕНО: Download (а не UrlDownloadToFile)
-    try {
-        Download(VersionURL, TempFile)
-    } catch {
+; ============================================
+;       MAIN HOTSTRINGS / YOUR CODE
+; ============================================
+
+::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ
+::к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg
+
+
+; ============================================
+;            UPDATE CHECK
+; ============================================
+CheckForUpdate() {
+    global APP_VERSION, VERSION_URL
+
+    versionFile := A_Temp "\ttt_version.txt"
+
+    try Download(VERSION_URL, versionFile)
+    catch
         return
-    }
 
-    if !FileExist(TempFile) {
+    onlineVersion := Trim(FileRead(versionFile))
+    FileDelete(versionFile)
+
+    if (onlineVersion = "")
         return
-    }
 
-    githubVersion := Trim(FileRead(TempFile), " `t`n`r")
-    FileDelete(TempFile)
+    if (onlineVersion != APP_VERSION) {
+        result := MsgBox(
+            "Доступно обновление " onlineVersion "`n" .
+            "Установить?",
+            "TTT Updater",
+            "YesNo Iconi"
+        )
 
-    if (githubVersion != CurrentVersion) {
-        Result := MsgBox("Доступна новая версия " githubVersion "!`nУ вас версия " CurrentVersion "`n`nОбновить?", "Обновление", 4)
-        if (Result = "Yes") {
-            UpdateScript()
-        }
+        if (result = "Yes")
+            LaunchUpdater()
     }
 }
 
-; ========== ОБНОВЛЕНИЕ ==========
-UpdateScript() {
-    global RepoOwner, RepoName, Branch
+; ============================================
+;         LAUNCH EXTERNAL UPDATER
+; ============================================
+LaunchUpdater() {
+    global SCRIPT_URL
 
-    ScriptURL := "https://raw.githubusercontent.com/" RepoOwner "/" RepoName "/" Branch "/script.ahk"
-    NewScript := A_Temp "\new_script.ahk"
+    updaterPath := A_Temp "\ttt_updater.ahk"
 
-    ; ИСПРАВЛЕНО: Download (а не UrlDownloadToFile)
-    try {
-        Download(ScriptURL, NewScript)
-    } catch {
-        MsgBox("Не удалось скачать обновление", "Ошибка", 16)
-        return
-    }
+    updaterCode :=
+    '
+#Requires AutoHotkey v2.0
+Sleep 1500
 
-    if !FileExist(NewScript) {
-        MsgBox("Файл обновления не скачался", "Ошибка", 16)
-        return
-    }
+newFile := A_Temp "\ttt_new.ahk"
+target  := "' A_ScriptFullPath '"
+ahkExe  := "' A_AhkPath '"
+url     := "' SCRIPT_URL '"
 
-    ; Создаём BAT-файл
-    BatFile := A_Temp "\update.bat"
-    
-    if FileExist(BatFile) {
-        FileDelete(BatFile)
-    }
-    
-    FileAppend("@echo off", BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend("timeout /t 2 /nobreak >nul", BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend('copy /Y "' NewScript '" "' A_ScriptFullPath '"', BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend("if %errorlevel% equ 0 (", BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend('    del "' NewScript '"', BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend('    start "" "' A_ScriptFullPath '"', BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend(")", BatFile)
-    FileAppend("`n", BatFile)
-    FileAppend('del "%~f0"', BatFile)
+try Download(url, newFile)
+catch ExitApp
 
-    Run(BatFile, , "Hide")
-    ExitApp()
+if !FileExist(newFile)
+    ExitApp
+
+try {
+    FileMove(newFile, target, 1)
+} catch {
+    ExitApp
 }
 
-; ========== ЗАПУСК ==========
-CheckForUpdates()
+Run "\"" ahkExe "\" \"" target "\""
+FileDelete(A_ScriptFullPath)
+ExitApp
+'
 
-; ========== ВАШ ОСНОВНОЙ КОД ==========
+    try {
+        if FileExist(updaterPath)
+            FileDelete(updaterPath)
 
-; УСАДЬБА "РОСИНКА"
-::р1::https://disk.yandex.ru/d/KbSZjhPWvJaVYQ 165 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::р2::https://disk.yandex.ru/d/L_9WKglBQ0_bcA 179 тыс./чел., 2-х местный номер (свой санузел)
-::р3::https://disk.yandex.ru/d/UUekdbfxQys0UQ 179 тыс./чел., 3-х местный номер (свой санузел)
-::р4::https://disk.yandex.ru/d/Gc6c2yd3WZqhTQ 179 тыс./чел., 4-х местный номер (свой санузел)
+        FileAppend(updaterCode, updaterPath, "UTF-8")
+    } catch {
+        MsgBox("Не удалось создать updater")
+        return
+    }
 
-; УСАДЬБА "КАНТРИ"
-::к1::https://disk.yandex.ru/d/gPQsRMKT2CPSNg 165555 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к2::https://disk.yandex.ru/d/C8bF6NlbDU5x5Q 165 тыс./чел., 2-х местный номер (туалет в номере, душ общий)
-::к3::https://disk.yandex.ru/d/b_AyU8vH4YTFPw 169 тыс./чел., 2-х местный номер (санузел на 2 комнаты)
-::к4::https://clck.ru/3RDNpV 179 тыс./чел., одноместный номер (санузел на 2 комнаты)
-::к5::https://disk.yandex.ru/d/U2-iRYUjrPbD5Q 179 тыс./чел., 2-х местный номер (свой санузел за пределами номера)
-::к6::https://disk.yandex.ru/d/ose-NoIbZq1m0Q 185 тыс./чел., одноместный номер (свой санузел за пределами номера)
-::к7::https://clck.ru/3RK9WY 179 тыс./чел., 3-х местный номер (свой санузел за пределами номера)
-::к8::https://clck.ru/3RNCbo 179 тыс./чел., 2-х местный номер (свой санузел)
-::к9::https://clck.ru/3RKV8Q 179 тыс./чел., 2-х/3-х местный номер (свой санузел)
-
-; ОЙКУМЕН
-::о1::https://disk.yandex.ru/d/iLm8XE2BtdbCdA 179 тыс./чел., 2-х местный номер (свой санузел)
-::о2::169 тыс./чел., 2-х местный номер (санузел на 2 комнаты) — ссылки нет
-
-; ========== КОНЕЦ ==========
+    Run('"' A_AhkPath '" "' updaterPath '"')
+    ExitApp
+}
