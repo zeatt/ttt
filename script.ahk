@@ -6,7 +6,7 @@ SendMode Input
 ; ========== АВТООБНОВЛЕНИЕ ==========
 CurrentVersion := "1.0.3"
 
-; GitHub RAW ссылки (замените НАЗВАНИЕ_ВЕТКИ на main или master)
+; GitHub RAW ссылки
 VersionURL := "https://raw.githubusercontent.com/zeatt/ttt/main/version.txt"
 ScriptURL  := "https://raw.githubusercontent.com/zeatt/ttt/main/script.ahk"
 
@@ -17,31 +17,37 @@ CheckForUpdates() {
     URLDownloadToFile, %VersionURL%, %TempFile%
     
     if ErrorLevel {
-        return  ; Не удалось проверить — просто работаем дальше
+        return
     }
     
     FileRead, LatestVersion, %TempFile%
-    LatestVersion := Trim(LatestVersion)
+    
+    ; ========== ОЧИСТКА ОТ ВСЕХ НЕВИДИМЫХ СИМВОЛОВ ==========
+    LatestVersion := RegExReplace(LatestVersion, "\s+")  ; Удаляет ВСЕ пробелы, переносы, табуляции
+    CurrentVersionClean := RegExReplace(CurrentVersion, "\s+")
+    
     FileDelete, %TempFile%
     
-    if (LatestVersion != CurrentVersion) {
+    ; Сравниваем очищенные версии
+    if (LatestVersion != CurrentVersionClean) {
         MsgBox, 36, Доступно обновление!, Версия %LatestVersion% уже доступна.`nУ вас версия %CurrentVersion%.`n`nОбновить скрипт сейчас?
         IfMsgBox, Yes
         {
-            ; Скачиваем новую версию скрипта
             NewScript := A_Temp "\script_new.ahk"
             URLDownloadToFile, %ScriptURL%, %NewScript%
             
             if ErrorLevel {
-                MsgBox, Не удалось скачать обновление. Проверьте интернет.
+                MsgBox, Не удалось скачать обновление.
                 return
             }
             
-            ; Заменяем текущий скрипт новым
+            DetectHiddenWindows, On
+            WinClose, %A_ScriptFullPath% ahk_class AutoHotkey
+            
             FileCopy, %NewScript%, %A_ScriptFullPath%, 1
             
             if ErrorLevel {
-                MsgBox, Не удалось обновить файл. Запустите скрипт от имени Администратора.
+                MsgBox, Не удалось обновить файл.
                 return
             }
             
